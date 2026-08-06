@@ -66,6 +66,21 @@ class OccupationalServiceProvider extends ServiceProvider
         $this->registerPatientPanel();
 
         $this->registerCompanyPatientProvider();
+
+        $this->registerJournalProvider();
+    }
+
+    /**
+     * Liefert Vorsorge/Beschäftigung als Einträge in die Akte/Verlauf (encounter), wenn da.
+     */
+    protected function registerJournalProvider(): void
+    {
+        try {
+            resolve(\Platform\Encounter\Services\JournalRegistry::class)
+                ->register(new \Platform\Occupational\Journal\OccupationalJournalProvider());
+        } catch (\Throwable $e) {
+            // encounter-Modul nicht verfügbar — ignorieren.
+        }
     }
 
     /**
