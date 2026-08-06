@@ -12,6 +12,10 @@
             @svg('heroicon-o-home', 'w-4 h-4 text-[var(--nx-text)]')
             <span class="ml-2 text-sm">Dashboard</span>
         </x-ui-sidebar-item>
+        <x-ui-sidebar-item :href="route('occupational.companies.index')">
+            @svg('heroicon-o-building-office-2', 'w-4 h-4 text-[var(--nx-text)]')
+            <span class="ml-2 text-sm">Betriebe</span>
+        </x-ui-sidebar-item>
         <x-ui-sidebar-item :href="route('occupational.employees.index')">
             @svg('heroicon-o-users', 'w-4 h-4 text-[var(--nx-text)]')
             <span class="ml-2 text-sm">Beschäftigte</span>

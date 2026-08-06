@@ -34,11 +34,16 @@ return [
                     'icon'  => 'heroicon-o-home',
                 ],
                 [
+                    'label' => 'Betriebe',
+                    'route' => 'occupational.companies.index',
+                    'icon'  => 'heroicon-o-building-office-2',
+                ],
+                [
                     'label' => 'Beschäftigte',
                     'route' => 'occupational.employees.index',
                     'icon'  => 'heroicon-o-users',
                 ],
-                // 'Betriebe' + 'Gefährdungsbeurteilungen' folgen als nächste Entitäten.
+                // 'Gefährdungsbeurteilungen' folgt als nächste Entität.
             ],
         ],
     ],
