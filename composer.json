@@ -1,0 +1,21 @@
+{
+    "name": "martin3r/platform-occupational",
+    "description": "Occupational - Betriebsmedizin-Fachmodul (Employment, Gefaehrdung, Vorsorgeart) auf patient + encounter",
+    "type": "library",
+    "license": "MIT",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Platform\\Occupational\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Platform\\Occupational\\OccupationalServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
