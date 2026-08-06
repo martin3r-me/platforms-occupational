@@ -64,6 +64,21 @@ class OccupationalServiceProvider extends ServiceProvider
         $this->registerLivewireComponents();
 
         $this->registerTools();
+
+        $this->registerOrganizationIntegration();
+    }
+
+    /**
+     * Registriert den EntityLinkProvider, damit Beschäftigte am Betrieb-Org-Entity rendern.
+     */
+    protected function registerOrganizationIntegration(): void
+    {
+        try {
+            resolve(\Platform\Organization\Services\EntityLinkRegistry::class)
+                ->register(new \Platform\Occupational\Organization\OccupationalEntityLinkProvider());
+        } catch (\Throwable $e) {
+            // Organization-Modul nicht verfügbar — ignorieren.
+        }
     }
 
     protected function registerTools(): void

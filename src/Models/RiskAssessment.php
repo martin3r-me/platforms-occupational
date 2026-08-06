@@ -54,6 +54,18 @@ class RiskAssessment extends Model
                 $model->status = AssessmentStatus::Draft->value;
             }
         });
+
+        static::saved(function (self $model) {
+            if ($model->wasRecentlyCreated || $model->wasChanged('organization_entity_id')) {
+                \Platform\Occupational\Support\OrganizationLink::sync(
+                    'occupational_risk_assessment',
+                    (int) $model->id,
+                    $model->organization_entity_id ? (int) $model->organization_entity_id : null,
+                    $model->team_id ? (int) $model->team_id : null,
+                    auth()->id(),
+                );
+            }
+        });
     }
 
     public function scopeForTeam(Builder $query, int $teamId): Builder

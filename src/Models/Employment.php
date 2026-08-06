@@ -46,6 +46,18 @@ class Employment extends Model
                 $model->team_id = auth()->user()->currentTeam?->id;
             }
         });
+
+        static::saved(function (self $model) {
+            if ($model->wasRecentlyCreated || $model->wasChanged('organization_entity_id')) {
+                \Platform\Occupational\Support\OrganizationLink::sync(
+                    'occupational_employment',
+                    (int) $model->id,
+                    $model->organization_entity_id ? (int) $model->organization_entity_id : null,
+                    $model->team_id ? (int) $model->team_id : null,
+                    auth()->id(),
+                );
+            }
+        });
     }
 
     public function scopeForTeam(Builder $query, int $teamId): Builder
