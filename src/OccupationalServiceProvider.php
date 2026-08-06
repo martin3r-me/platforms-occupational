@@ -66,6 +66,21 @@ class OccupationalServiceProvider extends ServiceProvider
         $this->registerTools();
 
         $this->registerOrganizationIntegration();
+
+        $this->registerPatientPanel();
+    }
+
+    /**
+     * Dockt das „Beschäftigung"-Panel an die Patienten-Akte an (wenn patient-Modul da ist).
+     */
+    protected function registerPatientPanel(): void
+    {
+        try {
+            resolve(\Platform\Patient\Services\PatientPanelRegistry::class)
+                ->register(new \Platform\Occupational\Patient\OccupationalPatientPanel());
+        } catch (\Throwable $e) {
+            // patient-Modul nicht verfügbar — ignorieren.
+        }
     }
 
     /**
