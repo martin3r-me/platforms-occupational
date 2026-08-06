@@ -86,9 +86,9 @@
             <x-nx-input-select name="patient_id" label="Patient" wire:model="patient_id"
                                :options="$patientOptions" nullable nullLabel="— Patient wählen —" required />
             <x-nx-input-text name="position" label="Position" wire:model="position" />
-            <x-nx-input-select name="organization_entity_id" label="Betrieb" wire:model="organization_entity_id"
-                               :options="$betriebOptions" nullable nullLabel="— Betrieb wählen —"
-                               hint="Betrieb = Kunde aus dem Organization-Graphen." />
+            <x-nx-input-select name="organization_entity_id" label="Betrieb / Abteilung" wire:model="organization_entity_id"
+                               :options="$betriebOptions" nullable nullLabel="— Betrieb/Abteilung wählen —"
+                               hint="Kunde oder Abteilung aus dem Organization-Graphen (Umwelt)." />
         </div>
         <x-slot name="footer">
             <div class="flex justify-end gap-3">
