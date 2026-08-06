@@ -15,17 +15,11 @@ return new class extends Migration
         Schema::table('occupational_employments', function (Blueprint $table) {
             $table->renameColumn('company_id', 'organization_entity_id');
         });
-        Schema::table('occupational_risk_assessments', function (Blueprint $table) {
-            $table->renameColumn('company_id', 'organization_entity_id');
-        });
     }
 
     public function down(): void
     {
         Schema::table('occupational_employments', function (Blueprint $table) {
-            $table->renameColumn('organization_entity_id', 'company_id');
-        });
-        Schema::table('occupational_risk_assessments', function (Blueprint $table) {
             $table->renameColumn('organization_entity_id', 'company_id');
         });
     }

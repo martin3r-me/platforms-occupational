@@ -10,9 +10,6 @@ use Livewire\Livewire;
 use Platform\Core\PlatformCore;
 use Platform\Core\Routing\ModuleRouter;
 use Platform\Occupational\Models\Employment;
-use Platform\Occupational\Models\RiskAssessment;
-use Platform\Occupational\Models\Hazard;
-use Platform\Occupational\Models\Exposure;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -26,10 +23,7 @@ class OccupationalServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Relation::morphMap([
-            'occupational_employment'      => Employment::class,
-            'occupational_risk_assessment' => RiskAssessment::class,
-            'occupational_hazard'          => Hazard::class,
-            'occupational_exposure'        => Exposure::class,
+            'occupational_employment' => Employment::class,
         ]);
 
         if (
