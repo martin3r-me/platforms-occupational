@@ -81,12 +81,8 @@
     <x-nx-modal wire:model="showCreate" size="md">
         <x-slot name="header">Neue:r Beschäftigte:r</x-slot>
         <div class="space-y-4">
-            <x-nx-input-select name="patient_id" label="Patient" wire:model="patient_id" required>
-                <option value="">— Patient wählen —</option>
-                @foreach($patients as $patient)
-                    <option value="{{ $patient->id }}">{{ $patient->getDisplayName() }}</option>
-                @endforeach
-            </x-nx-input-select>
+            <x-nx-input-select name="patient_id" label="Patient" wire:model="patient_id"
+                               :options="$patientOptions" nullable nullLabel="— Patient wählen —" required />
             <x-nx-input-text name="position" label="Position" wire:model="position" />
             <x-nx-input-number name="company_id" label="Firma (CRM-ID)" wire:model="company_id"
                                hint="CRM-Firmenauswahl folgt — vorerst optionale ID." />
