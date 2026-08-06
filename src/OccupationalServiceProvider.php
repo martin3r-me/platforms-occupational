@@ -62,6 +62,21 @@ class OccupationalServiceProvider extends ServiceProvider
         $this->registerOrganizationIntegration();
 
         $this->registerPatientPanel();
+
+        $this->registerCompanyPatientProvider();
+    }
+
+    /**
+     * Liefert dem Betrieb-Cockpit (customer) die Patienten des Betriebs bei (wenn customer da ist).
+     */
+    protected function registerCompanyPatientProvider(): void
+    {
+        try {
+            resolve(\Platform\Customer\Services\CompanyPatientRegistry::class)
+                ->register(new \Platform\Occupational\Company\OccupationalCompanyPatientProvider());
+        } catch (\Throwable $e) {
+            // customer-Modul nicht verfügbar — ignorieren.
+        }
     }
 
     /**
