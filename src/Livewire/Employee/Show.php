@@ -6,6 +6,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Platform\Occupational\Models\Employment as EmploymentModel;
+use Platform\Occupational\Support\Betriebe;
 
 class Show extends Component
 {
@@ -15,7 +16,7 @@ class Show extends Component
     public array $form = [];
 
     protected array $fields = [
-        'position', 'personnel_number', 'company_id', 'started_at', 'ended_at',
+        'position', 'personnel_number', 'organization_entity_id', 'started_at', 'ended_at',
         'active', 'first_aider', 'work_notes', 'risk',
     ];
 
@@ -43,10 +44,10 @@ class Show extends Component
     protected function rules(): array
     {
         return [
-            'form.position'         => ['nullable', 'string', 'max:255'],
-            'form.personnel_number' => ['nullable', 'string', 'max:64'],
-            'form.company_id'       => ['nullable', 'integer'],
-            'form.started_at'       => ['nullable', 'date'],
+            'form.position'                => ['nullable', 'string', 'max:255'],
+            'form.personnel_number'        => ['nullable', 'string', 'max:64'],
+            'form.organization_entity_id'  => ['nullable', 'integer'],
+            'form.started_at'              => ['nullable', 'date'],
             'form.ended_at'         => ['nullable', 'date'],
             'form.active'           => ['boolean'],
             'form.first_aider'      => ['boolean'],
@@ -80,10 +81,11 @@ class Show extends Component
 
     public function render()
     {
-        $model = $this->resolve($this->employmentId)->load('patient');
+        $model = $this->resolve($this->employmentId)->load(['patient', 'organizationEntity']);
 
         return view('occupational::livewire.employee.show', [
-            'employment' => $model,
+            'employment'     => $model,
+            'betriebOptions' => Betriebe::options((int) Auth::user()->currentTeam->id),
         ])->layout('platform::layouts.app');
     }
 }

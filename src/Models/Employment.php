@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Employment — Beschäftigung: Patient ↔ Firma (betriebsmed. Sonderfall).
  *
- * Beide Bezüge sind LOSE gekoppelt: patient_id → patient-Modul, company_id → CRM.
+ * Beide Bezüge sind LOSE gekoppelt: patient_id → patient-Modul, organization_entity_id → organization (Betrieb).
  * Der Arbeitgeber-Begriff lebt ausschließlich hier, nie im fachneutralen patient-Modul.
  *
  * @ai.description Beschäftigungsverhältnis (Patient↔Firma) mit Start/Ende.
@@ -21,7 +21,7 @@ class Employment extends Model
     protected $fillable = [
         'team_id',
         'patient_id',
-        'company_id',
+        'organization_entity_id',
         'position',
         'personnel_number',
         'started_at',
@@ -61,5 +61,13 @@ class Employment extends Model
     public function patient(): BelongsTo
     {
         return $this->belongsTo(\Platform\Patient\Models\Patient::class, 'patient_id');
+    }
+
+    /**
+     * Betrieb = Org-Entity (lose, kein DB-FK). occupational sitzt auf organization.
+     */
+    public function organizationEntity(): BelongsTo
+    {
+        return $this->belongsTo(\Platform\Organization\Models\OrganizationEntity::class, 'organization_entity_id');
     }
 }

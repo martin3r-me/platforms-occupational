@@ -58,7 +58,7 @@ class GetEmployeeTool implements ToolContract, ToolMetadataContract
                 'id' => $e->id,
                 'patient_id' => $e->patient_id,
                 'patient_name' => $e->patient?->getDisplayName(),
-                'company_id' => $e->company_id,
+                'organization_entity_id' => $e->organization_entity_id,
                 'position' => $e->position,
                 'personnel_number' => $e->personnel_number,
                 'started_at' => optional($e->started_at)->toDateString(),

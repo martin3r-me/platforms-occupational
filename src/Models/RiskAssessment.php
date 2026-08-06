@@ -4,6 +4,7 @@ namespace Platform\Occupational\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Symfony\Component\Uid\UuidV7;
 use Platform\Occupational\Enums\AssessmentStatus;
@@ -20,7 +21,7 @@ class RiskAssessment extends Model
     protected $fillable = [
         'uuid',
         'team_id',
-        'company_id',
+        'organization_entity_id',
         'title',
         'work_area',
         'assessed_on',
@@ -63,5 +64,13 @@ class RiskAssessment extends Model
     public function hazards(): HasMany
     {
         return $this->hasMany(Hazard::class, 'risk_assessment_id');
+    }
+
+    /**
+     * Betrieb = Org-Entity (lose, kein DB-FK).
+     */
+    public function organizationEntity(): BelongsTo
+    {
+        return $this->belongsTo(\Platform\Organization\Models\OrganizationEntity::class, 'organization_entity_id');
     }
 }

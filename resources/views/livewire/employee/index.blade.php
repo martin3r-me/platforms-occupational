@@ -31,6 +31,7 @@
                 <x-nx-table>
                     <x-nx-table-header>
                         <x-nx-table-header-cell>Name</x-nx-table-header-cell>
+                        <x-nx-table-header-cell>Betrieb</x-nx-table-header-cell>
                         <x-nx-table-header-cell>Position</x-nx-table-header-cell>
                         <x-nx-table-header-cell>Status</x-nx-table-header-cell>
                     </x-nx-table-header>
@@ -39,6 +40,7 @@
                             <x-nx-table-row wire:key="emp-{{ $employment->id }}"
                                             :href="route('occupational.employees.show', $employment->id)">
                                 <x-nx-table-cell>{{ $employment->patient?->getDisplayName() ?? '—' }}</x-nx-table-cell>
+                                <x-nx-table-cell>{{ $employment->organizationEntity?->name ?? '—' }}</x-nx-table-cell>
                                 <x-nx-table-cell>{{ $employment->position ?? '—' }}</x-nx-table-cell>
                                 <x-nx-table-cell>
                                     @if($employment->active)
@@ -84,8 +86,9 @@
             <x-nx-input-select name="patient_id" label="Patient" wire:model="patient_id"
                                :options="$patientOptions" nullable nullLabel="— Patient wählen —" required />
             <x-nx-input-text name="position" label="Position" wire:model="position" />
-            <x-nx-input-number name="company_id" label="Firma (CRM-ID)" wire:model="company_id"
-                               hint="CRM-Firmenauswahl folgt — vorerst optionale ID." />
+            <x-nx-input-select name="organization_entity_id" label="Betrieb" wire:model="organization_entity_id"
+                               :options="$betriebOptions" nullable nullLabel="— Betrieb wählen —"
+                               hint="Betrieb = Kunde aus dem Organization-Graphen." />
         </div>
         <x-slot name="footer">
             <div class="flex justify-end gap-3">

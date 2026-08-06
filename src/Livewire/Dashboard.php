@@ -19,9 +19,9 @@ class Dashboard extends Component
             $stats['employees'] = EmploymentModel::query()->forTeam($team->id)->count();
             $stats['companies'] = EmploymentModel::query()
                 ->forTeam($team->id)
-                ->whereNotNull('company_id')
+                ->whereNotNull('organization_entity_id')
                 ->distinct()
-                ->count('company_id');
+                ->count('organization_entity_id');
         }
 
         return view('occupational::livewire.dashboard', [

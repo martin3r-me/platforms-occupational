@@ -5,6 +5,7 @@ namespace Platform\Occupational\Livewire\Employee;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Platform\Occupational\Models\Employment as EmploymentModel;
+use Platform\Occupational\Support\Betriebe;
 use Platform\Patient\Models\Patient as PatientModel;
 
 class Index extends Component
@@ -12,20 +13,20 @@ class Index extends Component
     public bool $showCreate = false;
     public ?int $patient_id = null;
     public string $position = '';
-    public ?int $company_id = null;
+    public ?int $organization_entity_id = null;
 
     protected function rules(): array
     {
         return [
-            'patient_id' => ['required', 'integer'],
-            'position'   => ['nullable', 'string', 'max:255'],
-            'company_id' => ['nullable', 'integer'],
+            'patient_id'             => ['required', 'integer'],
+            'position'               => ['nullable', 'string', 'max:255'],
+            'organization_entity_id' => ['nullable', 'integer'],
         ];
     }
 
     public function updatedShowCreate(): void
     {
-        $this->reset(['patient_id', 'position', 'company_id']);
+        $this->reset(['patient_id', 'position', 'organization_entity_id']);
         $this->resetValidation();
     }
 
@@ -42,10 +43,10 @@ class Index extends Component
         }
 
         $employment = EmploymentModel::create([
-            'patient_id' => $patient->id,
-            'position'   => $this->position ?: null,
-            'company_id' => $this->company_id ?: null,
-            'active'     => true,
+            'patient_id'             => $patient->id,
+            'position'               => $this->position ?: null,
+            'organization_entity_id' => $this->organization_entity_id ?: null,
+            'active'                 => true,
         ]);
 
         return $this->redirectRoute('occupational.employees.show', ['employment' => $employment->id], navigate: true);
@@ -57,7 +58,7 @@ class Index extends Component
 
         $employments = EmploymentModel::query()
             ->forTeam($team->id)
-            ->with('patient')
+            ->with(['patient', 'organizationEntity'])
             ->orderByDesc('id')
             ->get();
 
@@ -69,6 +70,7 @@ class Index extends Component
         return view('occupational::livewire.employee.index', [
             'employments'    => $employments,
             'patientOptions' => $patients->mapWithKeys(fn ($p) => [$p->id => $p->getDisplayName()])->all(),
+            'betriebOptions' => Betriebe::options((int) $team->id),
         ])->layout('platform::layouts.app');
     }
 }

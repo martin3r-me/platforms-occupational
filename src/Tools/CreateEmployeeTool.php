@@ -23,7 +23,7 @@ class CreateEmployeeTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'POST /occupational/employees - Creates an employment (patient ↔ company). REQUIRED: patient_id (must belong to the team). Optional: company_id (CRM), position, personnel_number, started_at, ended_at, active (default true), first_aider, work_notes, risk.';
+        return 'POST /occupational/employees - Creates an employment (patient ↔ Betrieb). REQUIRED: patient_id (must belong to the team). Optional: organization_entity_id (Betrieb = org entity), position, personnel_number, started_at, ended_at, active (default true), first_aider, work_notes, risk.';
     }
 
     public function getSchema(): array
@@ -32,7 +32,7 @@ class CreateEmployeeTool implements ToolContract, ToolMetadataContract
             'properties' => [
                 'team_id' => ['type' => 'integer', 'description' => 'Optional: team id. Default: current team.'],
                 'patient_id' => ['type' => 'integer', 'description' => 'Patient id (REQUIRED).'],
-                'company_id' => ['type' => 'integer', 'description' => 'Optional: CRM company id (employer).'],
+                'organization_entity_id' => ['type' => 'integer', 'description' => 'Optional: Betrieb: Organization-Entity-ID (external_customer).'],
                 'position' => ['type' => 'string', 'description' => 'Optional.'],
                 'personnel_number' => ['type' => 'string', 'description' => 'Optional.'],
                 'started_at' => ['type' => 'string', 'description' => 'Optional: date YYYY-MM-DD.'],
@@ -69,8 +69,8 @@ class CreateEmployeeTool implements ToolContract, ToolMetadataContract
                 'patient_id' => $patient->id,
                 'active' => array_key_exists('active', $arguments) ? (bool) $arguments['active'] : true,
             ];
-            if (isset($arguments['company_id']) && $arguments['company_id'] !== '') {
-                $payload['company_id'] = (int) $arguments['company_id'];
+            if (isset($arguments['organization_entity_id']) && $arguments['organization_entity_id'] !== '') {
+                $payload['organization_entity_id'] = (int) $arguments['organization_entity_id'];
             }
             if (array_key_exists('first_aider', $arguments)) {
                 $payload['first_aider'] = (bool) $arguments['first_aider'];
@@ -86,7 +86,7 @@ class CreateEmployeeTool implements ToolContract, ToolMetadataContract
             return ToolResult::success([
                 'id' => $employment->id,
                 'patient_id' => $employment->patient_id,
-                'company_id' => $employment->company_id,
+                'organization_entity_id' => $employment->organization_entity_id,
                 'team_id' => $employment->team_id,
                 'message' => 'Employment created successfully.',
             ]);

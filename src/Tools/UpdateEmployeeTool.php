@@ -22,7 +22,7 @@ class UpdateEmployeeTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'PUT /occupational/employees - Updates an employment. REQUIRED: employment_id. Optional: company_id, position, personnel_number, started_at, ended_at, active, first_aider, work_notes, risk (empty string clears text fields).';
+        return 'PUT /occupational/employees - Updates an employment. REQUIRED: employment_id. Optional: organization_entity_id, position, personnel_number, started_at, ended_at, active, first_aider, work_notes, risk (empty string clears text fields).';
     }
 
     public function getSchema(): array
@@ -31,7 +31,7 @@ class UpdateEmployeeTool implements ToolContract, ToolMetadataContract
             'properties' => [
                 'team_id' => ['type' => 'integer', 'description' => 'Optional: team id. Default: current team.'],
                 'employment_id' => ['type' => 'integer', 'description' => 'Id of the employment (REQUIRED).'],
-                'company_id' => ['type' => 'integer', 'description' => 'Optional: CRM company id.'],
+                'organization_entity_id' => ['type' => 'integer', 'description' => 'Optional: Betrieb-Organization-Entity-ID.'],
                 'position' => ['type' => 'string', 'description' => 'Optional.'],
                 'personnel_number' => ['type' => 'string', 'description' => 'Optional.'],
                 'started_at' => ['type' => 'string', 'description' => 'Optional: date YYYY-MM-DD.'],
@@ -65,8 +65,8 @@ class UpdateEmployeeTool implements ToolContract, ToolMetadataContract
             }
 
             $payload = [];
-            if (isset($arguments['company_id'])) {
-                $payload['company_id'] = $arguments['company_id'] === '' ? null : (int) $arguments['company_id'];
+            if (isset($arguments['organization_entity_id'])) {
+                $payload['organization_entity_id'] = $arguments['organization_entity_id'] === '' ? null : (int) $arguments['organization_entity_id'];
             }
             if (array_key_exists('active', $arguments) && $arguments['active'] !== null) {
                 $payload['active'] = (bool) $arguments['active'];

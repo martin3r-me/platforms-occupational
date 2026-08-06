@@ -31,8 +31,9 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <x-nx-input-text name="form.position" label="Position" wire:model="form.position" />
                     <x-nx-input-text name="form.personnel_number" label="Personalnummer" wire:model="form.personnel_number" />
-                    <x-nx-input-number name="form.company_id" label="Firma (CRM-ID)" wire:model="form.company_id"
-                                       hint="CRM-Firmenauswahl folgt." />
+                    <x-nx-input-select name="form.organization_entity_id" label="Betrieb" wire:model="form.organization_entity_id"
+                                       :options="$betriebOptions" nullable nullLabel="— Betrieb wählen —"
+                                       hint="Betrieb = Kunde aus dem Organization-Graphen." />
                     <x-nx-input-date name="form.started_at" label="Beginn" wire:model="form.started_at" />
                     <x-nx-input-date name="form.ended_at" label="Ende" wire:model="form.ended_at" />
                     <x-nx-input-checkbox name="form.active" label="Aktiv" wire:model="form.active" />

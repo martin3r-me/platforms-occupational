@@ -22,7 +22,7 @@ class ListEmployeesTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'GET /occupational/employees - Lists employments (patient ↔ company). Params: team_id (optional), company_id (optional), active (optional), sort/limit/offset.';
+        return 'GET /occupational/employees - Lists employments (patient ↔ company). Params: team_id (optional), organization_entity_id (optional), active (optional), sort/limit/offset.';
     }
 
     public function getSchema(): array
@@ -30,7 +30,7 @@ class ListEmployeesTool implements ToolContract, ToolMetadataContract
         return $this->mergeSchemas($this->getStandardGetSchema(), [
             'properties' => [
                 'team_id' => ['type' => 'integer', 'description' => 'Optional: team id. Default: current team.'],
-                'company_id' => ['type' => 'integer', 'description' => 'Optional: filter by CRM company id.'],
+                'organization_entity_id' => ['type' => 'integer', 'description' => 'Optional: filter by Betrieb-Organization-Entity-ID.'],
                 'active' => ['type' => 'boolean', 'description' => 'Optional: filter by active flag.'],
             ],
         ]);
@@ -47,14 +47,14 @@ class ListEmployeesTool implements ToolContract, ToolMetadataContract
 
             $query = Employment::query()->forTeam($teamId)->with('patient');
 
-            if (isset($arguments['company_id'])) {
-                $query->where('company_id', (int) $arguments['company_id']);
+            if (isset($arguments['organization_entity_id'])) {
+                $query->where('organization_entity_id', (int) $arguments['organization_entity_id']);
             }
             if (array_key_exists('active', $arguments) && $arguments['active'] !== null) {
                 $query->where('active', (bool) $arguments['active']);
             }
 
-            $this->applyStandardFilters($query, $arguments, ['company_id', 'active', 'created_at']);
+            $this->applyStandardFilters($query, $arguments, ['organization_entity_id', 'active', 'created_at']);
             $this->applyStandardSort($query, $arguments, ['created_at', 'started_at', 'position'], 'created_at', 'desc');
 
             $result = $this->applyStandardPaginationResult($query, $arguments);
@@ -63,7 +63,7 @@ class ListEmployeesTool implements ToolContract, ToolMetadataContract
                 'id' => $e->id,
                 'patient_id' => $e->patient_id,
                 'patient_name' => $e->patient?->getDisplayName(),
-                'company_id' => $e->company_id,
+                'organization_entity_id' => $e->organization_entity_id,
                 'position' => $e->position,
                 'active' => (bool) $e->active,
                 'team_id' => $e->team_id,
