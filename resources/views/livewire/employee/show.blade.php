@@ -42,6 +42,49 @@
             </x-nx-card>
         </x-nx-section>
 
+        {{-- Vorsorge (ArbMedVV) --}}
+        <x-nx-section icon="heroicon-o-shield-check" title="Vorsorge" :hint="$provisions->count()">
+            <x-slot name="action">
+                <x-nx-button variant="secondary" size="sm" wire:click="$set('showProvisionModal', true)">
+                    @svg('heroicon-o-plus', 'w-4 h-4') Vorsorge anlegen
+                </x-nx-button>
+            </x-slot>
+            @if($provisions->isEmpty())
+                <x-nx-card>
+                    <x-nx-empty icon="heroicon-o-shield-check">
+                        Noch keine Vorsorge. „Vorsorge anlegen" verknüpft einen ArbMedVV-Anlass mit Frist.
+                    </x-nx-empty>
+                </x-nx-card>
+            @else
+                <x-nx-card flush>
+                    <x-nx-table>
+                        <x-nx-table-header>
+                            <x-nx-table-header-cell>Anlass</x-nx-table-header-cell>
+                            <x-nx-table-header-cell>Art</x-nx-table-header-cell>
+                            <x-nx-table-header-cell>Fällig</x-nx-table-header-cell>
+                        </x-nx-table-header>
+                        <x-nx-table-body>
+                            @foreach($provisions as $provision)
+                                <x-nx-table-row wire:key="prov-{{ $provision->id }}">
+                                    <x-nx-table-cell>{{ $provision->occasion?->title ?? '—' }}</x-nx-table-cell>
+                                    <x-nx-table-cell>{{ $provision->type?->label() ?? '—' }}</x-nx-table-cell>
+                                    <x-nx-table-cell>
+                                        @if($provision->next_due_at)
+                                            <x-nx-badge :variant="$provision->isOverdue() ? 'danger' : 'default'" dot>
+                                                {{ $provision->next_due_at->format('d.m.Y') }}
+                                            </x-nx-badge>
+                                        @else
+                                            —
+                                        @endif
+                                    </x-nx-table-cell>
+                                </x-nx-table-row>
+                            @endforeach
+                        </x-nx-table-body>
+                    </x-nx-table>
+                </x-nx-card>
+            @endif
+        </x-nx-section>
+
         {{-- Hinweise --}}
         <x-nx-section icon="heroicon-o-document-text" title="Hinweise">
             <x-nx-card>
@@ -52,6 +95,27 @@
             </x-nx-card>
         </x-nx-section>
     </x-ui-page-container>
+
+    {{-- Vorsorge anlegen --}}
+    <x-nx-modal wire:model="showProvisionModal" size="md">
+        <x-slot name="header">Vorsorge anlegen</x-slot>
+        <div class="space-y-4">
+            <x-nx-input-select name="provisionForm.occasion_id" label="ArbMedVV-Anlass" wire:model="provisionForm.occasion_id"
+                               :options="$occasionOptions" nullable nullLabel="— Anlass wählen —" />
+            <x-nx-input-select name="provisionForm.type" label="Vorsorgeart" wire:model="provisionForm.type"
+                               :options="$careTypeOptions" />
+            <div class="grid grid-cols-2 gap-4">
+                <x-nx-input-text name="provisionForm.interval_months" label="Intervall (Monate)" wire:model="provisionForm.interval_months" type="number" />
+                <x-nx-input-date name="provisionForm.next_due_at" label="Fällig am" wire:model="provisionForm.next_due_at" />
+            </div>
+        </div>
+        <x-slot name="footer">
+            <div class="flex justify-end gap-3">
+                <x-nx-button variant="ghost" wire:click="$set('showProvisionModal', false)">Abbrechen</x-nx-button>
+                <x-nx-button variant="primary" wire:click="createProvision">Anlegen</x-nx-button>
+            </div>
+        </x-slot>
+    </x-nx-modal>
 
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Übersicht" width="w-80" :defaultOpen="true">

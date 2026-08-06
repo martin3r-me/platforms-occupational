@@ -6,6 +6,8 @@ use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Platform\Occupational\Models\Employment as EmploymentModel;
+use Platform\Occupational\Models\Provision;
+use Platform\Occupational\Enums\CareType;
 use Platform\Occupational\Support\Betriebe;
 
 class Show extends Component
@@ -18,6 +20,14 @@ class Show extends Component
     protected array $fields = [
         'position', 'personnel_number', 'organization_entity_id', 'started_at', 'ended_at',
         'active', 'first_aider', 'work_notes', 'risk',
+    ];
+
+    public bool $showProvisionModal = false;
+    public array $provisionForm = [
+        'occasion_id'     => null,
+        'type'            => 'mandatory',
+        'interval_months' => null,
+        'next_due_at'     => null,
     ];
 
     public function mount(int $employment): void
@@ -79,13 +89,61 @@ class Show extends Component
         return $this->redirectRoute('occupational.employees.index', navigate: true);
     }
 
+    public function createProvision(): void
+    {
+        $employment = $this->resolve($this->employmentId);
+        if (!$employment->patient_id) {
+            return;
+        }
+
+        $occasionId = $this->provisionForm['occasion_id'] ?: null;
+
+        Provision::create([
+            'patient_id'      => $employment->patient_id,
+            'occasion_type'   => $occasionId ? 'arbmedvv_occasion' : null,
+            'occasion_id'     => $occasionId,
+            'type'            => $this->provisionForm['type'] ?: 'mandatory',
+            'interval_months' => $this->provisionForm['interval_months'] ?: null,
+            'next_due_at'     => $this->provisionForm['next_due_at'] ?: null,
+            'created_by_user_id' => Auth::id(),
+        ]);
+
+        $this->provisionForm = ['occasion_id' => null, 'type' => 'mandatory', 'interval_months' => null, 'next_due_at' => null];
+        $this->showProvisionModal = false;
+    }
+
     public function render()
     {
+        $team  = (int) Auth::user()->currentTeam->id;
         $model = $this->resolve($this->employmentId)->load(['patient', 'organizationEntity']);
 
+        $provisions = Provision::query()
+            ->forTeam($team)
+            ->where('patient_id', $model->patient_id)
+            ->with('occasion')
+            ->orderByRaw('next_due_at is null, next_due_at asc')
+            ->get();
+
+        $occasionOptions = [];
+        if (class_exists(\Platform\Arbmedvv\Models\Occasion::class)) {
+            $occasionOptions = \Platform\Arbmedvv\Models\Occasion::query()
+                ->where('team_id', $team)
+                ->orderBy('title')
+                ->get()
+                ->map(fn ($o) => ['value' => $o->id, 'label' => $o->title])
+                ->all();
+        }
+
+        $careTypeOptions = collect(CareType::cases())
+            ->map(fn ($c) => ['value' => $c->value, 'label' => $c->label()])
+            ->all();
+
         return view('occupational::livewire.employee.show', [
-            'employment'     => $model,
-            'betriebOptions' => Betriebe::options((int) Auth::user()->currentTeam->id),
+            'employment'      => $model,
+            'betriebOptions'  => Betriebe::options($team),
+            'provisions'      => $provisions,
+            'occasionOptions' => $occasionOptions,
+            'careTypeOptions' => $careTypeOptions,
         ])->layout('platform::layouts.app');
     }
 }

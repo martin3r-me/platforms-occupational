@@ -10,6 +10,7 @@ use Livewire\Livewire;
 use Platform\Core\PlatformCore;
 use Platform\Core\Routing\ModuleRouter;
 use Platform\Occupational\Models\Employment;
+use Platform\Occupational\Models\Provision;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -24,6 +25,7 @@ class OccupationalServiceProvider extends ServiceProvider
     {
         Relation::morphMap([
             'occupational_employment' => Employment::class,
+            'occupational_provision'  => Provision::class,
         ]);
 
         if (
@@ -85,8 +87,9 @@ class OccupationalServiceProvider extends ServiceProvider
     protected function registerPatientPanel(): void
     {
         try {
-            resolve(\Platform\Patient\Services\PatientPanelRegistry::class)
-                ->register(new \Platform\Occupational\Patient\OccupationalPatientPanel());
+            $registry = resolve(\Platform\Patient\Services\PatientPanelRegistry::class);
+            $registry->register(new \Platform\Occupational\Patient\OccupationalPatientPanel());
+            $registry->register(new \Platform\Occupational\Patient\OccupationalVorsorgePanel());
         } catch (\Throwable $e) {
             // patient-Modul nicht verfügbar — ignorieren.
         }
