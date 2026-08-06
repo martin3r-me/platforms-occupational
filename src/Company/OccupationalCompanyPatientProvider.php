@@ -29,12 +29,17 @@ class OccupationalCompanyPatientProvider implements CompanyPatientProvider
                 continue;
             }
 
+            // Person-Klick landet primär in der Akte (Verlauf), Stammdaten von dort ein Klick weg.
+            $url = \Illuminate\Support\Facades\Route::has('encounter.akte.show')
+                ? route('encounter.akte.show', $patient->id)
+                : route('patient.patients.show', $patient->id);
+
             $rows[] = [
                 'patient_id' => (int) $patient->id,
                 'name'       => $patient->getDisplayName() ?? ('Patient #' . $patient->id),
                 'subtitle'   => $e->position ?: null,
                 'meta'       => $e->organizationEntity?->name,
-                'url'        => route('patient.patients.show', $patient->id),
+                'url'        => $url,
             ];
         }
 
