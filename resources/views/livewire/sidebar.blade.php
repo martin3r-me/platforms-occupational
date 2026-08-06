@@ -1,5 +1,5 @@
 {{--
-    Occupational · Sidebar (nx-Design-System). Nur var(--nx-*) Tokens.
+    Occupational · Haupt-Sidebar (nx). Modul-Links + Betrieb-Baum als Kontext-Linse.
 --}}
 
 <div>
@@ -7,27 +7,18 @@
         Betriebsmedizin
     </div>
 
-    <x-ui-sidebar-list label="Betriebsmedizin">
-        <x-ui-sidebar-item :href="route('occupational.dashboard')">
+    <x-ui-sidebar-list>
+        <x-ui-sidebar-item :href="route('occupational.dashboard')" :active="request()->routeIs('occupational.dashboard')">
             @svg('heroicon-o-home', 'w-4 h-4 text-[var(--nx-text)]')
             <span class="ml-2 text-sm">Dashboard</span>
         </x-ui-sidebar-item>
-        <x-ui-sidebar-item :href="route('occupational.employees.index')">
+        <x-ui-sidebar-item :href="route('occupational.employees.index')" :active="request()->routeIs('occupational.employees.index') && ! request()->query('node')">
             @svg('heroicon-o-users', 'w-4 h-4 text-[var(--nx-text)]')
-            <span class="ml-2 text-sm">Beschäftigte</span>
+            <span class="ml-2 text-sm">Alle Beschäftigte</span>
         </x-ui-sidebar-item>
     </x-ui-sidebar-list>
 
-    @if($employments->isNotEmpty())
-        <x-ui-sidebar-list label="Zuletzt">
-            @foreach($employments as $employment)
-                <x-ui-sidebar-item :href="route('occupational.employees.show', $employment->id)">
-                    @svg('heroicon-o-user', 'w-4 h-4 text-[var(--nx-text)]')
-                    <span class="ml-2 text-sm truncate">{{ $employment->patient?->getDisplayName() ?? '—' }}</span>
-                </x-ui-sidebar-item>
-            @endforeach
-        </x-ui-sidebar-list>
-    @endif
+    <x-ui-tree-nav label="Nach Betrieb" :nodes="$nodes" :activeId="$activeId" />
 
     <div x-show="collapsed" class="px-2 py-2 border-b border-[color:var(--nx-line)]">
         <div class="flex flex-col gap-2">

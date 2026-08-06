@@ -4,26 +4,33 @@ namespace Platform\Occupational\Livewire;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
-use Platform\Occupational\Models\Employment as EmploymentModel;
 
+/**
+ * Occupational-Haupt-Sidebar — gleiche Betrieb-Baum-Navigation wie customer/patient/encounter.
+ * Klick auf einen Knoten zeigt dessen Beschäftigte (occupational.employees.index?node=). Der
+ * Baum kommt aus customer (guarded).
+ */
 class Sidebar extends Component
 {
     public function render()
     {
-        $user = Auth::user();
-        $employments = collect();
+        $team = Auth::user()?->currentTeam?->id;
 
-        if ($user && $user->currentTeam) {
-            $employments = EmploymentModel::query()
-                ->forTeam($user->currentTeam->id)
-                ->with('patient')
-                ->orderByDesc('id')
-                ->limit(15)
-                ->get();
+        $nodes = [];
+        if ($team && class_exists(\Platform\Customer\Support\Companies::class)) {
+            foreach (\Platform\Customer\Support\Companies::tree((int) $team) as $n) {
+                $nodes[] = [
+                    'id'    => $n['id'],
+                    'label' => $n['name'],
+                    'depth' => $n['depth'],
+                    'url'   => route('occupational.employees.index', ['node' => $n['id']]),
+                ];
+            }
         }
 
         return view('occupational::livewire.sidebar', [
-            'employments' => $employments,
+            'nodes'    => $nodes,
+            'activeId' => request()->query('node'),
         ]);
     }
 }

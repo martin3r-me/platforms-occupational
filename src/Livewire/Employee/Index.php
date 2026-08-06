@@ -56,11 +56,22 @@ class Index extends Component
     {
         $team = Auth::user()->currentTeam;
 
-        $employments = EmploymentModel::query()
+        $query = EmploymentModel::query()
             ->forTeam($team->id)
             ->with(['patient', 'organizationEntity'])
-            ->orderByDesc('id')
-            ->get();
+            ->orderByDesc('id');
+
+        // Betrieb-Kontext (?node): auf den Teilbaum filtern (guarded via customer).
+        $node = request()->query('node');
+        $contextLabel = null;
+        if ($node && class_exists(\Platform\Customer\Support\Companies::class)) {
+            $entityIds = \Platform\Customer\Support\Companies::subtreeIds((int) $node, (int) $team->id);
+            $query->whereIn('organization_entity_id', $entityIds);
+            $entity = \Platform\Organization\Models\OrganizationEntity::query()->whereKey($node)->first(['name']);
+            $contextLabel = $entity?->name;
+        }
+
+        $employments = $query->get();
 
         $patients = PatientModel::query()
             ->forTeam($team->id)
@@ -69,6 +80,7 @@ class Index extends Component
 
         return view('occupational::livewire.employee.index', [
             'employments'    => $employments,
+            'contextLabel'   => $contextLabel,
             'patientOptions' => $patients->map(fn ($p) => ['value' => $p->id, 'label' => $p->getDisplayName()])->values()->all(),
             'betriebOptions' => Betriebe::options((int) $team->id),
         ])->layout('platform::layouts.app');

@@ -20,10 +20,17 @@
     </x-slot>
 
     <x-ui-page-container width="contained" spacing="space-y-6">
+        @if($contextLabel)
+            <x-nx-callout variant="info" icon="heroicon-o-building-office-2" title="Kontext: {{ $contextLabel }}">
+                Beschäftigte dieses Betriebs (inkl. Abteilungen).
+                <a href="{{ route('occupational.employees.index') }}" wire:navigate class="underline">Filter entfernen</a>
+            </x-nx-callout>
+        @endif
+
         @if($employments->isEmpty())
             <x-nx-card>
                 <x-nx-empty icon="heroicon-o-users">
-                    Noch keine Beschäftigten. Lege den ersten über „Neue:r Beschäftigte:r" an.
+                    @if($contextLabel) Keine Beschäftigten für diesen Betrieb. @else Noch keine Beschäftigten. Lege den ersten über „Neue:r Beschäftigte:r" an. @endif
                 </x-nx-empty>
             </x-nx-card>
         @else

@@ -25,6 +25,30 @@
     </x-slot>
 
     <x-ui-page-container width="contained" spacing="space-y-6">
+        {{-- Person (nur Referenz — Stammdaten leben in der Akte) --}}
+        <x-nx-card>
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    @svg('heroicon-o-user', 'w-6 h-6 text-[color:var(--nx-muted)] shrink-0')
+                    <div class="min-w-0">
+                        <div class="text-sm font-medium text-[color:var(--nx-text)] truncate">{{ $employment->patient?->getDisplayName() ?? '—' }}</div>
+                        <div class="text-xs text-[color:var(--nx-muted)] truncate">
+                            {{ $employment->position ?: 'Beschäftigte:r' }}@if($employment->organizationEntity) · {{ $employment->organizationEntity->name }}@endif
+                        </div>
+                    </div>
+                </div>
+                @if($akteUrl)
+                    <x-nx-button variant="secondary" size="sm" :href="$akteUrl" wire:navigate>
+                        @svg('heroicon-o-identification', 'w-4 h-4')
+                        <span>Zur Akte</span>
+                    </x-nx-button>
+                @endif
+            </div>
+            <p class="mt-3 text-xs text-[color:var(--nx-faint)]">
+                Stammdaten (Identität, Kontakt, Adresse) werden in der Patienten-Akte gepflegt — hier nur die betriebsärztlichen Daten.
+            </p>
+        </x-nx-card>
+
         {{-- Beschäftigung --}}
         <x-nx-section icon="heroicon-o-briefcase" title="Beschäftigung">
             <x-nx-card>
@@ -118,20 +142,30 @@
     </x-nx-modal>
 
     <x-slot name="sidebar">
-        <x-ui-page-sidebar title="Übersicht" width="w-80" :defaultOpen="true">
-            <div class="p-6 space-y-6">
-                <div>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[color:var(--nx-faint)] mb-3">Patient</h3>
-                    @if($employment->patient)
-                        <a href="{{ route('patient.patients.show', $employment->patient->id) }}" wire:navigate
-                           class="text-sm text-[color:var(--nx-accent)] hover:underline">
-                            {{ $employment->patient->getDisplayName() }}
-                        </a>
-                    @else
-                        <div class="text-sm text-[color:var(--nx-muted)]">—</div>
-                    @endif
-                </div>
-            </div>
+        <x-ui-page-sidebar :title="$employment->organizationEntity?->name ?? 'Beschäftigte'" icon="heroicon-o-users" width="w-72" :defaultOpen="true">
+            <nav class="p-2 space-y-0.5">
+                <a href="{{ route('occupational.employees.index', $employment->organization_entity_id ? ['node' => $employment->organization_entity_id] : []) }}" wire:navigate
+                   class="flex items-center gap-2 px-2 py-1.5 text-xs text-[color:var(--nx-muted)] hover:text-[color:var(--nx-text)]">
+                    @svg('heroicon-o-chevron-left', 'w-3.5 h-3.5')
+                    <span>Alle Beschäftigten</span>
+                </a>
+                @foreach($colleagues as $c)
+                    <a href="{{ route('occupational.employees.show', $c->id) }}" wire:navigate
+                       @class([
+                           'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition',
+                           'bg-[color:var(--nx-active)] text-[color:var(--nx-text)] font-semibold' => $c->id === $employment->id,
+                           'text-[color:var(--nx-text)] hover:bg-[color:var(--nx-hover)]' => $c->id !== $employment->id,
+                       ])>
+                        @svg('heroicon-o-user', 'w-4 h-4 text-[color:var(--nx-muted)] shrink-0')
+                        <span class="min-w-0">
+                            <span class="block truncate">{{ $c->patient?->getDisplayName() ?? '—' }}</span>
+                            @if($c->position)
+                                <span class="block text-xs text-[color:var(--nx-faint)] truncate">{{ $c->position }}</span>
+                            @endif
+                        </span>
+                    </a>
+                @endforeach
+            </nav>
         </x-ui-page-sidebar>
     </x-slot>
 

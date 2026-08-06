@@ -138,12 +138,29 @@ class Show extends Component
             ->map(fn ($c) => ['value' => $c->value, 'label' => $c->label()])
             ->all();
 
+        // Link zur Patienten-Akte (Stammdaten leben dort, nicht hier).
+        $akteUrl = $model->patient_id ? route('patient.patients.show', $model->patient_id) : null;
+
+        // Kollegen im selben Betrieb-Teilbaum (innere Sidebar).
+        $colleagues = collect();
+        if ($model->organization_entity_id && class_exists(\Platform\Customer\Support\Companies::class)) {
+            $ids = \Platform\Customer\Support\Companies::subtreeIds((int) $model->organization_entity_id, $team);
+            $colleagues = EmploymentModel::query()
+                ->forTeam($team)
+                ->whereIn('organization_entity_id', $ids)
+                ->with('patient')
+                ->orderByDesc('active')
+                ->get();
+        }
+
         return view('occupational::livewire.employee.show', [
             'employment'      => $model,
             'betriebOptions'  => Betriebe::options($team),
             'provisions'      => $provisions,
             'occasionOptions' => $occasionOptions,
             'careTypeOptions' => $careTypeOptions,
+            'akteUrl'         => $akteUrl,
+            'colleagues'      => $colleagues,
         ])->layout('platform::layouts.app');
     }
 }
