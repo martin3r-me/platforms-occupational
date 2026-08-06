@@ -14,9 +14,10 @@ use Platform\Organization\Models\OrganizationEntityType;
 class Betriebe
 {
     /**
-     * Eingerückte Auswahl (entity_id => Name mit Baum-Einrückung).
+     * Eingerückte Auswahl als value/label-Liste (ID-Selects brauchen das Array-Format —
+     * integer-Keys würde x-nx-input-select als Skalar behandeln).
      *
-     * @return array<int,string>
+     * @return array<int,array{value:int,label:string}>
      */
     public static function options(int $teamId): array
     {
@@ -36,7 +37,7 @@ class Betriebe
 
         $out = [];
         $walk = function ($node, int $depth) use (&$walk, $byParent, &$out): void {
-            $out[$node->id] = str_repeat('— ', $depth) . $node->name;
+            $out[] = ['value' => (int) $node->id, 'label' => str_repeat('— ', $depth) . $node->name];
             foreach (($byParent[$node->id] ?? collect())->sortBy('name') as $child) {
                 $walk($child, $depth + 1);
             }

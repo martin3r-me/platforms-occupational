@@ -69,7 +69,7 @@ class Index extends Component
 
         return view('occupational::livewire.employee.index', [
             'employments'    => $employments,
-            'patientOptions' => $patients->mapWithKeys(fn ($p) => [$p->id => $p->getDisplayName()])->all(),
+            'patientOptions' => $patients->map(fn ($p) => ['value' => $p->id, 'label' => $p->getDisplayName()])->values()->all(),
             'betriebOptions' => Betriebe::options((int) $team->id),
         ])->layout('platform::layouts.app');
     }
