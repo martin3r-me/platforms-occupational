@@ -122,19 +122,26 @@ class Show extends Component
         $employment = $this->resolve($this->employmentId);
 
         if (!$employment->patient_id || !$employment->organization_entity_id
-            || !class_exists(\Platform\Customer\Models\Hazard::class)
-            || !class_exists(\Platform\Customer\Support\Companies::class)) {
+            || !class_exists(\Platform\Customer\Models\Hazard::class)) {
             $this->dispatch('toast', message: 'Keine Gefährdungsbeurteilung verfügbar.', type: 'info');
             return;
         }
 
-        $ids = \Platform\Customer\Support\Companies::subtreeIds((int) $employment->organization_entity_id, $team);
+        // Vorfahren-Kette des Beschäftigten-Knotens (self + Eltern nach oben): eine GBU am
+        // Betrieb/an einer Abteilung gilt für alle Beschäftigten DARUNTER.
+        $chain = [];
+        $cur = (int) $employment->organization_entity_id;
+        $guard = 0;
+        while ($cur && $guard++ < 50) {
+            $chain[] = $cur;
+            $cur = (int) (\Platform\Organization\Models\OrganizationEntity::query()->whereKey($cur)->value('parent_entity_id') ?? 0);
+        }
 
         $hazards = \Platform\Customer\Models\Hazard::query()
             ->where('team_id', $team)
             ->where('catalog_type', 'arbmedvv_occasion')
             ->whereNotNull('catalog_id')
-            ->whereHas('riskAssessment', fn ($q) => $q->whereIn('organization_entity_id', $ids))
+            ->whereHas('riskAssessment', fn ($q) => $q->whereIn('organization_entity_id', $chain))
             ->get();
 
         $existing = Provision::query()->forTeam($team)
