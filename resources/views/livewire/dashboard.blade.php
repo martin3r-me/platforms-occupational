@@ -20,6 +20,10 @@
     </x-slot>
 
     <x-ui-page-container width="contained" spacing="space-y-6">
+        <p class="text-sm text-[color:var(--nx-muted)]">
+            Die betriebsärztliche Sicht je Beschäftigtem — Vorsorge & Beschäftigung. <strong>Dieselben Personen</strong> wie in <em>Patienten</em>, hier arbeitsmedizinisch statt als Stammdaten.
+        </p>
+
         <x-nx-stat-grid :cols="2">
             <x-nx-stat label="Betriebe" :value="$stats['companies']" icon="heroicon-o-building-office-2" hint="mit Beschäftigten" />
             <a href="{{ route('occupational.employees.index') }}" wire:navigate>
@@ -46,7 +50,7 @@
             <div class="p-6 space-y-6">
                 <div>
                     <h3 class="text-xs font-semibold uppercase tracking-wide text-[color:var(--nx-faint)] mb-3">Betriebe</h3>
-                    <div class="text-sm text-[color:var(--nx-muted)]">Noch keine Einträge.</div>
+                    <div class="text-sm text-[color:var(--nx-muted)]">Wähle links einen Betrieb — oder öffne die Beschäftigten-Liste.</div>
                 </div>
             </div>
         </x-ui-page-sidebar>
