@@ -69,6 +69,8 @@ class OccupationalServiceProvider extends ServiceProvider
         $this->registerCompanyPatientProvider();
 
         $this->registerJournalProvider();
+
+        $this->registerCertificateContext();
     }
 
     /**
@@ -79,6 +81,19 @@ class OccupationalServiceProvider extends ServiceProvider
         try {
             resolve(\Platform\Encounter\Services\JournalRegistry::class)
                 ->register(new \Platform\Occupational\Journal\OccupationalJournalProvider());
+        } catch (\Throwable $e) {
+            // encounter-Modul nicht verfügbar — ignorieren.
+        }
+    }
+
+    /**
+     * Liefert encounter den Bescheinigungs-Kontext (Arbeitgeber + Vorsorgeart/Frist), wenn da.
+     */
+    protected function registerCertificateContext(): void
+    {
+        try {
+            resolve(\Platform\Encounter\Services\CertificateContextRegistry::class)
+                ->register(new \Platform\Occupational\Encounter\OccupationalCertificateContext());
         } catch (\Throwable $e) {
             // encounter-Modul nicht verfügbar — ignorieren.
         }
