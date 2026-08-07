@@ -9,7 +9,7 @@
 
     <x-slot name="actionbar">
         <x-ui-page-actionbar :breadcrumbs="[
-            ['label' => 'Betriebsmedizin', 'route' => 'occupational.dashboard', 'icon' => 'briefcase'],
+            ['label' => 'Arbeitsmedizin', 'route' => 'occupational.dashboard', 'icon' => 'briefcase'],
             ['label' => 'Beschäftigte'],
         ]">
             <x-nx-button variant="primary" size="sm" wire:click="$set('showCreate', true)">

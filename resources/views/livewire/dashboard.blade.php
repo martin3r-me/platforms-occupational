@@ -5,12 +5,12 @@
 
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="Betriebsmedizin" />
+        <x-ui-page-navbar title="Arbeitsmedizin" />
     </x-slot>
 
     <x-slot name="actionbar">
         <x-ui-page-actionbar :breadcrumbs="[
-            ['label' => 'Betriebsmedizin', 'icon' => 'briefcase'],
+            ['label' => 'Arbeitsmedizin', 'icon' => 'briefcase'],
         ]">
             <x-nx-button variant="primary" size="sm" :href="route('occupational.employees.index')" wire:navigate>
                 @svg('heroicon-o-users', 'w-4 h-4')

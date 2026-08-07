@@ -26,7 +26,7 @@ return [
 
     'sidebar' => [
         [
-            'group' => 'Betriebsmedizin',
+            'group' => 'Arbeitsmedizin',
             'items' => [
                 [
                     'label' => 'Dashboard',
