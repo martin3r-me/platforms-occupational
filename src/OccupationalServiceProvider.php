@@ -36,6 +36,7 @@ class OccupationalServiceProvider extends ServiceProvider
             PlatformCore::registerModule([
                 'key'        => 'occupational',
                 'title'      => 'Arbeitsmedizin',
+                'group'      => 'clinical',
                 'routing'    => config('occupational.routing'),
                 'guard'      => config('occupational.guard'),
                 'navigation' => config('occupational.navigation'),
