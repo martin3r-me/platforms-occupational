@@ -69,6 +69,9 @@
         {{-- Vorsorge (ArbMedVV) --}}
         <x-nx-section icon="heroicon-o-shield-check" title="Vorsorge" :hint="$provisions->count()">
             <x-slot name="action">
+                <x-nx-button variant="ghost" size="sm" wire:click="deriveProvisionsFromGbu">
+                    @svg('heroicon-o-arrow-down-on-square', 'w-4 h-4') Aus GBU ableiten
+                </x-nx-button>
                 <x-nx-button variant="secondary" size="sm" wire:click="$set('showProvisionModal', true)">
                     @svg('heroicon-o-plus', 'w-4 h-4') Vorsorge anlegen
                 </x-nx-button>

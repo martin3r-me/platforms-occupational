@@ -112,6 +112,60 @@ class Show extends Component
         $this->showProvisionModal = false;
     }
 
+    /**
+     * GBU→Vorsorge-Brücke: leitet aus den Gefährdungsbeurteilungen des Betriebs
+     * (customer) die empfohlenen Vorsorgen ab und legt fehlende Provisions an.
+     */
+    public function deriveProvisionsFromGbu(): void
+    {
+        $team = (int) Auth::user()->currentTeam->id;
+        $employment = $this->resolve($this->employmentId);
+
+        if (!$employment->patient_id || !$employment->organization_entity_id
+            || !class_exists(\Platform\Customer\Models\Hazard::class)
+            || !class_exists(\Platform\Customer\Support\Companies::class)) {
+            $this->dispatch('toast', message: 'Keine Gefährdungsbeurteilung verfügbar.', type: 'info');
+            return;
+        }
+
+        $ids = \Platform\Customer\Support\Companies::subtreeIds((int) $employment->organization_entity_id, $team);
+
+        $hazards = \Platform\Customer\Models\Hazard::query()
+            ->where('team_id', $team)
+            ->where('catalog_type', 'arbmedvv_occasion')
+            ->whereNotNull('catalog_id')
+            ->whereHas('riskAssessment', fn ($q) => $q->whereIn('organization_entity_id', $ids))
+            ->get();
+
+        $existing = Provision::query()->forTeam($team)
+            ->where('patient_id', $employment->patient_id)
+            ->where('occasion_type', 'arbmedvv_occasion')
+            ->pluck('occasion_id')->filter()->all();
+
+        $created = 0;
+        $seen = [];
+        foreach ($hazards as $h) {
+            $occasionId = (int) $h->catalog_id;
+            if (in_array($occasionId, $existing, true) || in_array($occasionId, $seen, true)) {
+                continue;
+            }
+            $seen[] = $occasionId;
+
+            Provision::create([
+                'patient_id'         => $employment->patient_id,
+                'occasion_type'      => 'arbmedvv_occasion',
+                'occasion_id'        => $occasionId,
+                'type'               => $h->care_type ?: 'mandatory',
+                'created_by_user_id' => Auth::id(),
+            ]);
+            $created++;
+        }
+
+        $this->dispatch('toast',
+            message: $created > 0 ? "{$created} Vorsorge(n) aus der Gefährdungsbeurteilung abgeleitet." : 'Keine neuen Vorsorgen — alles bereits vorhanden.',
+            type: 'success');
+    }
+
     public function render()
     {
         $team  = (int) Auth::user()->currentTeam->id;
