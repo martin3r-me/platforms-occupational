@@ -8,11 +8,26 @@ use Illuminate\Support\Facades\Schema;
  * Person↔Tätigkeit-Bindung (temporal). Eine Beschäftigung hat 1..n Tätigkeiten über die Zeit
  * (multi + Historie in einer Struktur). `activity_id` = lose Referenz auf customer_activities.
  * `valid_until` NULL = aktuell. Person-Soll = Vereinigung der aktuellen Tätigkeiten.
+ *
+ * Idempotent: erster Lauf scheiterte am zu langen Auto-Index-Namen (>64), Tabelle war da schon
+ * angelegt. Compound-Index daher kurz benannt + Anlegen guarded.
  */
 return new class extends Migration
 {
     public function up(): void
     {
+        // Tabelle existiert bereits (Teil-Lauf) → nur den kurz benannten Compound-Index nachziehen.
+        if (Schema::hasTable('occupational_employment_activities')) {
+            try {
+                Schema::table('occupational_employment_activities', function (Blueprint $table) {
+                    $table->index(['employment_id', 'valid_until'], 'oea_emp_valid_idx');
+                });
+            } catch (\Throwable $e) {
+                // Index existiert bereits — ok.
+            }
+            return;
+        }
+
         Schema::create('occupational_employment_activities', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique();
@@ -25,7 +40,7 @@ return new class extends Migration
             $table->unsignedBigInteger('created_by_user_id')->nullable();
             $table->timestamps();
 
-            $table->index(['employment_id', 'valid_until']);
+            $table->index(['employment_id', 'valid_until'], 'oea_emp_valid_idx');
         });
     }
 
