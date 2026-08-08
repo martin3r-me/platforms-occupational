@@ -125,6 +125,14 @@ class OccupationalServiceProvider extends ServiceProvider
         } catch (\Throwable $e) {
             // customer-Modul nicht verfügbar — ignorieren.
         }
+
+        // Vorsorgekartei-Aggregation (Betrieb → Fälligkeiten) für das Betrieb-Cockpit.
+        try {
+            resolve(\Platform\Customer\Services\CompanyProvisionRegistry::class)
+                ->register(new \Platform\Occupational\Company\OccupationalCompanyProvisionProvider());
+        } catch (\Throwable $e) {
+            // customer-Modul nicht verfügbar — ignorieren.
+        }
     }
 
     /**
