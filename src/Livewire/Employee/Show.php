@@ -258,10 +258,17 @@ class Show extends Component
                 ];
             }
 
-            if ($model->organization_entity_id && class_exists(\Platform\Customer\Support\Companies::class)) {
-                $ids = \Platform\Customer\Support\Companies::subtreeIds((int) $model->organization_entity_id, $team);
+            if ($model->organization_entity_id) {
+                // Vorfahren-Kette (self + Eltern): eine Tätigkeit am Betrieb gilt für die Abteilungen darunter.
+                $chain = [];
+                $cur = (int) $model->organization_entity_id;
+                $guard = 0;
+                while ($cur && $guard++ < 50) {
+                    $chain[] = $cur;
+                    $cur = (int) (\Platform\Organization\Models\OrganizationEntity::query()->whereKey($cur)->value('parent_entity_id') ?? 0);
+                }
                 foreach (\Platform\Customer\Models\Activity::query()->forTeam($team)
-                            ->whereIn('organization_entity_id', $ids)->orderBy('name')->get() as $act) {
+                            ->whereIn('organization_entity_id', $chain)->orderBy('name')->get() as $act) {
                     if (!in_array((int) $act->id, $assignedIds, true)) {
                         $activityOptions[] = ['value' => (string) $act->id, 'label' => $act->name];
                     }
