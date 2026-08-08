@@ -7,6 +7,7 @@ use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Platform\Occupational\Models\Employment as EmploymentModel;
 use Platform\Occupational\Models\Provision;
+use Platform\Occupational\Models\ActivityAssignment;
 use Platform\Occupational\Enums\CareType;
 use Platform\Occupational\Support\Betriebe;
 
@@ -29,6 +30,9 @@ class Show extends Component
         'interval_months' => null,
         'next_due_at'     => null,
     ];
+
+    /** Auswahl im Tätigkeit-Zuweisen-Select (Activity-ID als String). */
+    public string $addActivityId = '';
 
     public function mount(int $employment): void
     {
@@ -110,6 +114,44 @@ class Show extends Component
 
         $this->provisionForm = ['occasion_id' => null, 'type' => 'mandatory', 'interval_months' => null, 'next_due_at' => null];
         $this->showProvisionModal = false;
+    }
+
+    /** Tätigkeit zuordnen (temporal). Das Soll der Tätigkeit gilt dann für diese Person. */
+    public function assignActivity(): void
+    {
+        if (!ctype_digit($this->addActivityId)) {
+            return;
+        }
+        $employment = $this->resolve($this->employmentId);
+        $team       = (int) Auth::user()->currentTeam->id;
+        $activityId = (int) $this->addActivityId;
+
+        $exists = ActivityAssignment::query()->forTeam($team)->current()
+            ->where('employment_id', $employment->id)
+            ->where('activity_id', $activityId)->exists();
+        if ($exists) {
+            $this->addActivityId = '';
+            return;
+        }
+
+        ActivityAssignment::create([
+            'team_id'            => $team,
+            'employment_id'      => $employment->id,
+            'patient_id'         => $employment->patient_id,
+            'activity_id'        => $activityId,
+            'created_by_user_id' => Auth::id(),
+        ]);
+        $this->addActivityId = '';
+        $this->dispatch('toast', message: 'Tätigkeit zugeordnet.', type: 'success');
+    }
+
+    /** Weichschließen (Historie bleibt). */
+    public function unassignActivity(int $assignmentId): void
+    {
+        $team = (int) Auth::user()->currentTeam->id;
+        ActivityAssignment::query()->forTeam($team)->current()
+            ->where('employment_id', $this->employmentId)->whereKey($assignmentId)
+            ->update(['valid_until' => now()->toDateString()]);
     }
 
     /**
@@ -199,6 +241,34 @@ class Show extends Component
             ->map(fn ($c) => ['value' => $c->value, 'label' => $c->label()])
             ->all();
 
+        // Tätigkeiten (customer, lose): aktuelle Zuordnungen + wählbare des Betriebs.
+        $activityAssignments = [];
+        $activityOptions     = [];
+        if (class_exists(\Platform\Customer\Models\Activity::class)) {
+            $assignments = ActivityAssignment::query()->forTeam($team)->current()
+                ->where('employment_id', $model->id)->get();
+            $assignedIds = $assignments->pluck('activity_id')->map(fn ($v) => (int) $v)->all();
+
+            $acts = \Platform\Customer\Models\Activity::query()->forTeam($team)
+                ->whereIn('id', $assignedIds ?: [0])->get()->keyBy('id');
+            foreach ($assignments as $a) {
+                $activityAssignments[] = [
+                    'id'   => $a->id,
+                    'name' => $acts[$a->activity_id]->name ?? ('Tätigkeit #' . $a->activity_id),
+                ];
+            }
+
+            if ($model->organization_entity_id && class_exists(\Platform\Customer\Support\Companies::class)) {
+                $ids = \Platform\Customer\Support\Companies::subtreeIds((int) $model->organization_entity_id, $team);
+                foreach (\Platform\Customer\Models\Activity::query()->forTeam($team)
+                            ->whereIn('organization_entity_id', $ids)->orderBy('name')->get() as $act) {
+                    if (!in_array((int) $act->id, $assignedIds, true)) {
+                        $activityOptions[] = ['value' => (string) $act->id, 'label' => $act->name];
+                    }
+                }
+            }
+        }
+
         // Link zur Patienten-Akte (Stammdaten leben dort, nicht hier).
         $akteUrl = $model->patient_id ? route('patient.patients.show', $model->patient_id) : null;
 
@@ -220,6 +290,8 @@ class Show extends Component
             'provisions'      => $provisions,
             'occasionOptions' => $occasionOptions,
             'careTypeOptions' => $careTypeOptions,
+            'activityAssignments' => $activityAssignments,
+            'activityOptions'     => $activityOptions,
             'akteUrl'         => $akteUrl,
             'colleagues'      => $colleagues,
         ])->layout('platform::layouts.app');

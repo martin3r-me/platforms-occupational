@@ -5,6 +5,8 @@ namespace Platform\Occupational\Company;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Platform\Customer\Contracts\CompanyProvisionProvider;
+use Platform\Occupational\Enums\CareType;
+use Platform\Occupational\Models\ActivityAssignment;
 use Platform\Occupational\Models\Employment;
 use Platform\Occupational\Models\Provision;
 
@@ -41,7 +43,9 @@ class OccupationalCompanyProvisionProvider implements CompanyProvisionProvider
         $today = Carbon::now()->startOfDay();
         $soon  = $today->copy()->addDays(self::LOOKAHEAD_DAYS);
 
+        // Ist: vorhandene Provisions je Person. Merkt sich (patient → Anlässe), um Soll-Lücken zu finden.
         $rows = [];
+        $provisionOccByPatient = [];
         foreach (Provision::query()->forTeam($teamId)
                     ->whereIn('patient_id', array_keys($empByPatient))
                     ->with('occasion')->get() as $p) {
@@ -62,9 +66,9 @@ class OccupationalCompanyProvisionProvider implements CompanyProvisionProvider
                 $status = 'ok';
             }
 
-            $url = Route::has('encounter.akte.show')
-                ? route('encounter.akte.show', $patient->id)
-                : route('patient.patients.show', $patient->id);
+            if ($p->occasion_id) {
+                $provisionOccByPatient[(int) $p->patient_id][(int) $p->occasion_id] = true;
+            }
 
             $rows[] = [
                 'patient_id'      => (int) $patient->id,
@@ -75,10 +79,109 @@ class OccupationalCompanyProvisionProvider implements CompanyProvisionProvider
                 'care_type_label' => $p->type?->label(),
                 'next_due'        => optional($due)->toDateString(),
                 'status'          => $status,
-                'url'             => $url,
+                'url'             => $this->akteUrl((int) $patient->id),
             ];
         }
 
+        // Soll: aus den Tätigkeiten der Personen — Anlässe ohne passende Provision = „fehlt".
+        foreach ($this->missingSoll($empByPatient, $provisionOccByPatient, $teamId) as $row) {
+            $rows[] = $row;
+        }
+
         return $rows;
+    }
+
+    /**
+     * Soll-Lücken: je Beschäftigung die aktuellen Tätigkeiten → deren aktuelle Anforderungen;
+     * jeder geforderte Anlass ohne passende Provision wird als „fehlt"-Zeile ergänzt. Guarded.
+     *
+     * @param  array<int,\Platform\Occupational\Models\Employment> $empByPatient
+     * @param  array<int,array<int,bool>> $provisionOccByPatient
+     * @return array<int,array>
+     */
+    protected function missingSoll(array $empByPatient, array $provisionOccByPatient, int $teamId): array
+    {
+        if (!class_exists(\Platform\Customer\Models\ActivityRequirement::class)) {
+            return [];
+        }
+
+        // employment_id → patient_id (für Rückzuordnung der Zuweisungen).
+        $patientByEmployment = [];
+        foreach ($empByPatient as $pid => $e) {
+            $patientByEmployment[(int) $e->id] = (int) $pid;
+        }
+        if (empty($patientByEmployment)) {
+            return [];
+        }
+
+        // Aktuelle Tätigkeit-Zuweisungen → patient_id ⇒ [activity_id].
+        $activitiesByPatient = [];
+        $allActivityIds = [];
+        foreach (ActivityAssignment::query()->forTeam($teamId)->current()
+                    ->whereIn('employment_id', array_keys($patientByEmployment))->get() as $a) {
+            $pid = $patientByEmployment[(int) $a->employment_id] ?? null;
+            if ($pid === null) {
+                continue;
+            }
+            $activitiesByPatient[$pid][(int) $a->activity_id] = true;
+            $allActivityIds[(int) $a->activity_id] = true;
+        }
+        if (empty($allActivityIds)) {
+            return [];
+        }
+
+        // Aktuelle Anforderungen (Soll) je Tätigkeit.
+        $reqByActivity = [];
+        foreach (\Platform\Customer\Models\ActivityRequirement::query()->forTeam($teamId)->current()
+                    ->whereIn('activity_id', array_keys($allActivityIds))
+                    ->with('occasion')->get() as $r) {
+            if (!$r->occasion_id) {
+                continue;
+            }
+            $reqByActivity[(int) $r->activity_id][] = [
+                'occasion_id' => (int) $r->occasion_id,
+                'title'       => optional($r->occasion)->title,
+                'care_type'   => $r->care_type,
+            ];
+        }
+
+        $rows = [];
+        foreach ($activitiesByPatient as $pid => $activityIds) {
+            $e = $empByPatient[$pid] ?? null;
+            if (!$e || !$e->patient) {
+                continue;
+            }
+            $have = $provisionOccByPatient[$pid] ?? [];
+            $seen = [];
+            foreach (array_keys($activityIds) as $aid) {
+                foreach ($reqByActivity[$aid] ?? [] as $req) {
+                    $oid = $req['occasion_id'];
+                    if (isset($have[$oid]) || isset($seen[$oid])) {
+                        continue; // schon als Provision vorhanden oder bereits ergänzt
+                    }
+                    $seen[$oid] = true;
+                    $rows[] = [
+                        'patient_id'      => $pid,
+                        'patient_name'    => $e->patient->getDisplayName() ?? ('Patient #' . $pid),
+                        'position'        => $e->position ?: null,
+                        'occasion'        => $req['title'],
+                        'care_type'       => $req['care_type'],
+                        'care_type_label' => CareType::tryFrom((string) $req['care_type'])?->label() ?? $req['care_type'],
+                        'next_due'        => null,
+                        'status'          => 'missing',
+                        'url'             => $this->akteUrl($pid),
+                    ];
+                }
+            }
+        }
+
+        return $rows;
+    }
+
+    protected function akteUrl(int $patientId): string
+    {
+        return Route::has('encounter.akte.show')
+            ? route('encounter.akte.show', $patientId)
+            : route('patient.patients.show', $patientId);
     }
 }

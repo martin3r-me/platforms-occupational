@@ -66,6 +66,45 @@
             </x-nx-card>
         </x-nx-section>
 
+        {{-- Tätigkeiten — bestimmen das Vorsorge-Soll dieser Person --}}
+        <x-nx-section icon="heroicon-o-identification" title="Tätigkeiten" :hint="count($activityAssignments)"
+                      description="Die Tätigkeit(en) dieser Person — ihr Soll ergibt sich daraus.">
+            <x-nx-card flush class="divide-y divide-[color:var(--nx-line)]">
+                @forelse($activityAssignments as $a)
+                    <div class="flex items-center justify-between gap-3 p-4">
+                        <span class="flex items-center gap-2 min-w-0">
+                            @svg('heroicon-o-identification', 'w-4 h-4 text-[color:var(--nx-muted)] shrink-0')
+                            <span class="text-sm text-[color:var(--nx-text)] truncate">{{ $a['name'] }}</span>
+                        </span>
+                        <button type="button" wire:click="unassignActivity({{ $a['id'] }})"
+                                class="text-xs text-[color:var(--nx-danger,#b42318)] hover:underline shrink-0">Entfernen</button>
+                    </div>
+                @empty
+                    <div class="p-4 text-sm text-[color:var(--nx-muted)]">
+                        Keine Tätigkeit zugeordnet. Ohne Tätigkeit kein abgeleitetes Soll.
+                    </div>
+                @endforelse
+            </x-nx-card>
+
+            @if(!empty($activityOptions))
+                <x-nx-card>
+                    <div class="flex items-end gap-3">
+                        <div class="flex-1">
+                            <x-nx-input-select name="addActivityId" label="Tätigkeit zuordnen" wire:model="addActivityId"
+                                nullable nullLabel="— wählen —" :options="$activityOptions" />
+                        </div>
+                        <x-nx-button variant="secondary" size="sm" wire:click="assignActivity">
+                            @svg('heroicon-o-plus', 'w-4 h-4') <span>Zuordnen</span>
+                        </x-nx-button>
+                    </div>
+                </x-nx-card>
+            @else
+                <p class="text-xs text-[color:var(--nx-faint)]">
+                    Keine Tätigkeiten am Betrieb hinterlegt — im Betrieb-Cockpit unter „Tätigkeiten" anlegen.
+                </p>
+            @endif
+        </x-nx-section>
+
         {{-- Vorsorge (ArbMedVV) --}}
         <x-nx-section icon="heroicon-o-shield-check" title="Vorsorge" :hint="$provisions->count()">
             <x-slot name="action">
