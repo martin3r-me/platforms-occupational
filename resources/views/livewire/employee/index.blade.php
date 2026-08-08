@@ -45,6 +45,7 @@
                     <x-nx-table-body>
                         @foreach($employments as $employment)
                             <x-nx-table-row wire:key="emp-{{ $employment->id }}"
+                                            clickable
                                             :href="route('occupational.employees.show', $employment->id)">
                                 <x-nx-table-cell>{{ $employment->patient?->getDisplayName() ?? '—' }}</x-nx-table-cell>
                                 <x-nx-table-cell>{{ $employment->organizationEntity?->name ?? '—' }}</x-nx-table-cell>
