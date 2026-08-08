@@ -31,6 +31,7 @@ class Provision extends Model
         'interval_months',
         'last_done_at',
         'next_due_at',
+        'last_certificate_id',
         'notes',
         'created_by_user_id',
     ];

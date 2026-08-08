@@ -71,6 +71,7 @@ class OccupationalServiceProvider extends ServiceProvider
         $this->registerJournalProvider();
 
         $this->registerCertificateContext();
+        $this->registerCertificateLifecycle();
     }
 
     /**
@@ -94,6 +95,20 @@ class OccupationalServiceProvider extends ServiceProvider
         try {
             resolve(\Platform\Encounter\Services\CertificateContextRegistry::class)
                 ->register(new \Platform\Occupational\Encounter\OccupationalCertificateContext());
+        } catch (\Throwable $e) {
+            // encounter-Modul nicht verfügbar — ignorieren.
+        }
+    }
+
+    /**
+     * Schreibt die Vorsorge-Kartei fort, wenn encounter eine Bescheinigung ausstellt
+     * (last_done_at + next_due_at). Push-Gegenstück zum Kontext-Provider.
+     */
+    protected function registerCertificateLifecycle(): void
+    {
+        try {
+            resolve(\Platform\Encounter\Services\CertificateLifecycleRegistry::class)
+                ->register(new \Platform\Occupational\Encounter\OccupationalProvisionAdvancer());
         } catch (\Throwable $e) {
             // encounter-Modul nicht verfügbar — ignorieren.
         }
