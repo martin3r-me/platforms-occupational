@@ -38,11 +38,6 @@ return [
                     'route' => 'occupational.employees.index',
                     'icon'  => 'heroicon-o-users',
                 ],
-                [
-                    'label' => 'Vorsorgekartei',
-                    'route' => 'occupational.kartei.index',
-                    'icon'  => 'heroicon-o-table-cells',
-                ],
                 // 'Gefährdungsbeurteilungen' folgt als nächste Entität.
             ],
         ],

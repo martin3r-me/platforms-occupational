@@ -3,7 +3,6 @@
 use Platform\Occupational\Livewire\Dashboard;
 use Platform\Occupational\Livewire\Employee\Index as EmployeeIndex;
 use Platform\Occupational\Livewire\Employee\Show as EmployeeShow;
-use Platform\Occupational\Livewire\Kartei\Index as KarteiIndex;
 
 /*
  * Occupational — Web-Routes (Prefix 'occupational' aus config).
@@ -14,4 +13,3 @@ use Platform\Occupational\Livewire\Kartei\Index as KarteiIndex;
 Route::get('/', Dashboard::class)->name('occupational.dashboard');
 Route::get('/employees', EmployeeIndex::class)->name('occupational.employees.index');
 Route::get('/employees/{employment}', EmployeeShow::class)->name('occupational.employees.show');
-Route::get('/kartei', KarteiIndex::class)->name('occupational.kartei.index');
