@@ -43,6 +43,28 @@
                 </x-nx-empty>
             </x-nx-card>
         @endif
+
+        {{-- Vorsorgekartei — zweiter Eingang (die Kartei selbst lebt im customer-Betrieb) --}}
+        @if($karteiAvailable && !empty($betriebe))
+            <x-nx-section icon="heroicon-o-shield-check" title="Vorsorgekartei"
+                          description="Soll/Ist je Betrieb — wer muss zum Termin. Öffnet die Kartei im jeweiligen Betrieb.">
+                <x-nx-card flush class="divide-y divide-[color:var(--nx-line)]">
+                    @foreach($betriebe as $b)
+                        <a href="{{ route('customer.companies.vorsorge', $b['id']) }}" wire:navigate
+                           class="flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-[color:var(--nx-hover)]">
+                            <span class="flex items-center gap-2.5 min-w-0">
+                                @svg('heroicon-o-building-office-2', 'w-4 h-4 text-[color:var(--nx-faint)] shrink-0')
+                                <span class="truncate text-[color:var(--nx-text)] font-medium">{{ $b['name'] }}</span>
+                            </span>
+                            <span class="flex items-center gap-3 shrink-0">
+                                <span class="text-xs text-[color:var(--nx-faint)]">{{ $b['count'] }} Beschäftigte</span>
+                                @svg('heroicon-o-chevron-right', 'w-4 h-4 text-[color:var(--nx-faint)]')
+                            </span>
+                        </a>
+                    @endforeach
+                </x-nx-card>
+            </x-nx-section>
+        @endif
     </x-ui-page-container>
 
     <x-slot name="sidebar">

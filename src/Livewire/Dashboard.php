@@ -14,6 +14,7 @@ class Dashboard extends Component
         $team = $user?->currentTeam;
 
         $stats = ['companies' => 0, 'employees' => 0];
+        $betriebe = [];
 
         if ($team) {
             $stats['employees'] = EmploymentModel::query()->forTeam($team->id)->count();
@@ -22,11 +23,33 @@ class Dashboard extends Component
                 ->whereNotNull('organization_entity_id')
                 ->distinct()
                 ->count('organization_entity_id');
+            $betriebe = $this->betriebe($team->id);
         }
 
         return view('occupational::livewire.dashboard', [
-            'stats'       => $stats,
-            'currentDate' => now()->format('d.m.Y'),
+            'stats'           => $stats,
+            'betriebe'        => $betriebe,
+            // Zweiter Eingang zur Vorsorgekartei: sie lebt im customer-Betrieb — nur verlinken, wenn da.
+            'karteiAvailable' => \Illuminate\Support\Facades\Route::has('customer.companies.vorsorge'),
+            'currentDate'     => now()->format('d.m.Y'),
         ])->layout('platform::layouts.app');
+    }
+
+    /** Betriebe (Org-Entities) mit aktiven Beschäftigten + Name + Anzahl. */
+    protected function betriebe(int $teamId): array
+    {
+        $out = [];
+        foreach (EmploymentModel::query()->forTeam($teamId)->where('active', true)
+                    ->with('organizationEntity')->get() as $e) {
+            $id = (int) $e->organization_entity_id;
+            if (!$id) {
+                continue;
+            }
+            $out[$id] ??= ['id' => $id, 'name' => $e->organizationEntity?->name ?: ('Betrieb #' . $id), 'count' => 0];
+            $out[$id]['count']++;
+        }
+        usort($out, fn ($a, $b) => strcmp($a['name'], $b['name']));
+
+        return $out;
     }
 }
