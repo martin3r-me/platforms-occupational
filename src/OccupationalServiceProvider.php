@@ -3,7 +3,6 @@
 namespace Platform\Occupational;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Livewire;
@@ -31,7 +30,7 @@ class OccupationalServiceProvider extends ServiceProvider
         if (
             config()->has('occupational.routing') &&
             config()->has('occupational.navigation') &&
-            Schema::hasTable('modules')
+            PlatformCore::modulesTableExists()
         ) {
             PlatformCore::registerModule([
                 'key'        => 'occupational',
